@@ -1,13 +1,13 @@
 package Kwiki::TimeZone;
-use strict;
-use warnings;
-use Kwiki::Plugin '-Base';
-our $VERSION = '0.10';
+use Kwiki::Plugin -Base;
+use mixin 'Kwiki::Installer';
+our $VERSION = '0.11';
 
 const class_id => 'time_zone';
-const class_title => 'Time Zone';
+const config_file => 'time_zone.yaml';
 
 sub register {
+    $self->hub->config->add_file($self->config_file);
     my $registry = shift;
     $registry->add(preference => $self->time_zone);
 }
@@ -16,7 +16,9 @@ sub time_zone {
     my $p = $self->new_preference('time_zone');
     $p->query('Enter your time zone.');
     $p->type('pulldown');
-    $p->default('GMT');
+    my $default = eval { $self->hub->config->time_zone_default };
+    undef $@;
+    $p->default($default || 'GMT');
     my $choices = [
         IDLW => "International Date Line West",
         NT   => "Nome",
@@ -63,6 +65,7 @@ sub time_zone {
         WAST => "West Australian Standard",
         WADT => "West Australian Daylight",
         JT   => "Java (3pm in Cronusland!)",
+        TWN  => "Taiwan",
         CCT  => "China Coast, USSR Zone 7",
         JST  => "Japan Standard, USSR Zone 8",
         CAST => "Central Australian Standard",
@@ -125,6 +128,7 @@ my $time_offsets = {
     WAST => 7,
     WADT => 8,
     JT   => 7.5,
+    TWN  => 8,
     CCT  => 8,
     JST  => 9,
     CAST => 9.5,
@@ -145,7 +149,6 @@ sub format {
     scalar(gmtime($time + $offset * 3600)) . " $time_zone";
 }
 
-1;
 __DATA__
 
 =head1 NAME 
@@ -170,3 +173,5 @@ under the same terms as Perl itself.
 See http://www.perl.com/perl/misc/Artistic.html
 
 =cut
+__config/time_zone.yaml__
+time_zone_default: GMT
